@@ -5,7 +5,7 @@ Todo CLI
 
 Usage:
   todo (add | a) [-i]
-  todo (print | p)
+  todo (print | p) [-v]
   todo -h | --help
   todo -V | --version
 
@@ -170,7 +170,7 @@ def wide_chars(s):
     return sum(unicodedata.east_asian_width(x) == 'W' for x in s)
 
 
-def pretty_print_task_list(tasks):
+def pretty_print_task_list(tasks, verbose):
     title_max_width = max([len('title')] +
                           [len(t['title']) + wide_chars(t['title'])
                            for t in tasks])
@@ -183,11 +183,14 @@ def pretty_print_task_list(tasks):
         ['', '^', 3],  # is_today
         ['id', '<', 7],
         ['title', '<', title_max_width + 1],
-        ['create', '<', 17],
-        ['expire', '<', 17],
         ['priority', '<', 9],
-        ['project', '<', project_max_width],
+        ['project', '<', project_max_width + 1],
     ]
+    if verbose:
+        fmt_spec.extend([
+            ['create', '<', 17],
+            ['expire', '<', 17],
+        ])
 
     # print header
     fmt_str = ''
@@ -216,7 +219,7 @@ def pretty_print_task_list(tasks):
             print(palette.color_even(fmt_str.format(*values)))
 
 
-def print_task():
+def print_task(verbose=False):
     tasks = []
     for task_list in ('todo', 'today'):
         task_dir = os.path.join(settings['task_dir'], task_list)
@@ -232,7 +235,7 @@ def print_task():
                     print('error: {0}'.format(unicode(e)))
 
     tasks = sorted(tasks, cmp_task, reverse=True)
-    pretty_print_task_list(tasks)
+    pretty_print_task_list(tasks, verbose)
 
 
 def unicode_docopt(args):
@@ -260,7 +263,7 @@ def main(args=None):
     if args['add'] or args['a']:
         add_task(args['-i'])
     if args['print'] or args['p']:
-        print_task()
+        print_task(verbose=args['-v'])
 
 
 if __name__ == '__main__':
