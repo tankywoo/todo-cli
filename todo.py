@@ -140,6 +140,30 @@ def cmp_task(task_a, task_b):
             return task_a['priority'] - task_b['priority']
 
 
+class Palette(object):
+    """color palette for tasks"""
+    COLOR_CODES = {
+        "reset": "\033[0m",
+        "bggrey1": "\033[48;5;241m",
+        "bggrey2": "\033[48;5;235m",
+        "bggrey3": "\033[48;5;236m",
+    }
+
+    def _color(self, color, s):
+        return Palette.COLOR_CODES[color] + s + Palette.COLOR_CODES["reset"]
+
+    def color_header(self, s):
+        return self._color('bggrey1', s)
+
+    def color_odd(self, s):
+        return self._color('bggrey2', s)
+        pass
+
+    def color_even(self, s):
+        return self._color('bggrey3', s)
+        pass
+
+
 def wide_chars(s):
     """return the extra width for wide characters
     ref: http://stackoverflow.com/a/23320535/1276501"""
@@ -156,7 +180,7 @@ def pretty_print_task_list(tasks):
 
     # key: field , value: [specifier, width]
     fmt_spec = [
-        ['list', '<', 6],
+        ['', '^', 3],  # is_today
         ['id', '<', 7],
         ['title', '<', title_max_width + 1],
         ['create', '<', 17],
@@ -170,18 +194,26 @@ def pretty_print_task_list(tasks):
     for i, (v_f, v_s, v_w) in enumerate(fmt_spec):
         fmt_str += '{%s:%s%s}' % (i, v_s, v_w)
     headers = [x[0] for x in fmt_spec]
-    print(fmt_str.format(*headers))
 
-    for task in tasks:
+    palette = Palette()
+    print(palette.color_header(fmt_str.format(*headers)))
+
+    for t_i, task in enumerate(tasks):
         fmt_str = ''
-        for i, (v_f, v_s, v_w) in enumerate(fmt_spec):
+        for f_i, (v_f, v_s, v_w) in enumerate(fmt_spec):
             if v_f == 'title':
-                fmt_str += '{%s:%s%s}' % (i, v_s, v_w - wide_chars(task[v_f]))
+                fmt_str += '{%s:%s%s}' % (f_i, v_s,
+                                          v_w - wide_chars(task[v_f]))
             else:
-                fmt_str += '{%s:%s%s}' % (i, v_s, v_w)
+                fmt_str += '{%s:%s%s}' % (f_i, v_s, v_w)
 
-        values = list(task[h] for h in headers)
-        print(fmt_str.format(*values))
+        today_flag = '*' if task['list'] == 'today' else ''
+        values = [today_flag] + list(task[h] for h in headers[1:])
+
+        if t_i % 2:
+            print(palette.color_odd(fmt_str.format(*values)))
+        else:
+            print(palette.color_even(fmt_str.format(*values)))
 
 
 def print_task():
