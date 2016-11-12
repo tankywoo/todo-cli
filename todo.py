@@ -58,14 +58,14 @@ def generate_id(length=6, chars=None):
     return ''.join(random.choice(chars) for _ in range(length))
 
 
-def add_task(interactive=False):
+def add_task(use_interactive=False):
     task_id = generate_id()
 
     now = datetime.datetime.now().strftime(date_fmt)
 
     title = project = expire = ''
     priority = 1
-    if interactive:
+    if use_interactive:
         title = raw_input('title: ').decode('utf-8')
         project = raw_input('project: ').decode('utf-8')
         priority = raw_input('priority (1,2,3): ')
@@ -80,7 +80,7 @@ def add_task(interactive=False):
         'expire: {0}'.format(expire),
         'id: {0}'.format(task_id),
         '---',
-    ]) + '\n\n'
+    ]) + '\n\n\n'
 
     todo_dir = os.path.join(settings['task_dir'], 'todo')
     if not os.path.exists(todo_dir):
@@ -93,6 +93,8 @@ def add_task(interactive=False):
         with io.open(task_file, "wt", encoding="utf-8") as fd:
             fd.write(meta)
         print('create task: {0}'.format(task_file))
+        if use_interactive and os.environ['EDITOR']:
+            os.system('{0} {1}'.format(os.environ['EDITOR'], task_file))
 
 
 def parse_task(filename):
@@ -261,7 +263,7 @@ def main(args=None):
         settings = yaml.load(fd.read())
 
     if args['add'] or args['a']:
-        add_task(args['-i'])
+        add_task(use_interactive=args['-i'])
     if args['print'] or args['p']:
         print_task(verbose=args['-v'])
 
