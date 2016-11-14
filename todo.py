@@ -5,6 +5,7 @@ Todo CLI
 
 Usage:
   todo (add | a) [-i]
+  todo (done | d) <task_id>
   todo (print | p) [-v]
   todo -h | --help
   todo -V | --version
@@ -17,6 +18,7 @@ Options:
   -h, --help          Help information
   -V, --version       Show version
   -i                  Add task in interactive mode
+  task_id             Id of task
 """
 from __future__ import print_function, unicode_literals, absolute_import
 import os
@@ -95,6 +97,26 @@ def add_task(use_interactive=False):
         print('create task: {0}'.format(task_file))
         if use_interactive and os.environ['EDITOR']:
             os.system('{0} {1}'.format(os.environ['EDITOR'], task_file))
+
+
+def done_task(task_id):
+    filename = '{0}.txt'.format(task_id)
+    task_file = None
+    for task_list in ('todo', 'today'):
+        task_dir = os.path.join(settings['task_dir'], task_list)
+        for root, dirs, files in os.walk(task_dir):
+            files = [f for f in files if not f.startswith(".")]
+            dirs[:] = [d for d in dirs if not d.startswith(".")]
+            if filename in files:
+                task_file = os.path.join(root, filename)
+    if not task_file:
+        raise Exception('task(id: `{0}\') not exists'.format(task_id))
+    done_dir = os.path.join(settings['task_dir'], 'done')
+    if not os.path.exists(done_dir):
+        mkdir_p(done_dir)
+    new_task_file = os.path.join(done_dir, filename)
+    os.rename(task_file, new_task_file)
+    print('done task: {0}'.format(new_task_file))
 
 
 def parse_task(filename):
@@ -264,7 +286,9 @@ def main(args=None):
 
     if args['add'] or args['a']:
         add_task(use_interactive=args['-i'])
-    if args['print'] or args['p']:
+    elif args['done'] or args['d']:
+        done_task(task_id=args['<task_id>'])
+    elif args['print'] or args['p']:
         print_task(verbose=args['-v'])
 
 
