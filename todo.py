@@ -5,6 +5,7 @@ Todo CLI
 
 Usage:
   todo (add | a) [-i]
+  todo (edit | e) <task_id>
   todo (done | d) <task_id>
   todo (print | p) [-v]
   todo -h | --help
@@ -99,7 +100,8 @@ def add_task(use_interactive=False):
             os.system('{0} {1}'.format(os.environ['EDITOR'], task_file))
 
 
-def done_task(task_id):
+def find_task_by_id(task_id):
+    """Return absolute path of task file, or None if not exists"""
     filename = '{0}.txt'.format(task_id)
     task_file = None
     for task_list in ('todo', 'today'):
@@ -109,6 +111,23 @@ def done_task(task_id):
             dirs[:] = [d for d in dirs if not d.startswith(".")]
             if filename in files:
                 task_file = os.path.join(root, filename)
+    return task_file
+
+
+def edit_task(task_id):
+    task_file = find_task_by_id(task_id)
+    if not task_file:
+        raise Exception('task(id: `{0}\') not exists'.format(task_id))
+    if os.environ['EDITOR']:
+        print('edit task: {0}'.format(task_file))
+        os.system('{0} {1}'.format(os.environ['EDITOR'], task_file))
+    else:
+        print('environ $EDITOR not set, can\'t edit task')
+
+
+def done_task(task_id):
+    filename = '{0}.txt'.format(task_id)
+    task_file = find_task_by_id(task_id)
     if not task_file:
         raise Exception('task(id: `{0}\') not exists'.format(task_id))
     done_dir = os.path.join(settings['task_dir'], 'done')
@@ -286,6 +305,8 @@ def main(args=None):
 
     if args['add'] or args['a']:
         add_task(use_interactive=args['-i'])
+    elif args['edit'] or args['e']:
+        edit_task(task_id=args['<task_id>'])
     elif args['done'] or args['d']:
         done_task(task_id=args['<task_id>'])
     elif args['print'] or args['p']:
