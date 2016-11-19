@@ -71,7 +71,7 @@ def add_task(use_interactive=False):
     if use_interactive:
         title = raw_input('title: ').decode('utf-8')
         project = raw_input('project: ').decode('utf-8')
-        priority = raw_input('priority (1,2,3): ')
+        priority = raw_input('priority (1,2,3): ') or 1
         expire = raw_input('expire [{0}]: '.format(date_fmt))
 
     meta = '\n'.join([
