@@ -147,10 +147,12 @@ def parse_task(filename):
         match_obj = re.match(regex, fd.read())
         if match_obj:
             meta = yaml.load(match_obj.group('meta'))
+            # convert None to empty string
+            for k, v in meta.iteritems():
+                if v is None:
+                    meta.update({k: ''})
             # pure digit in yaml is int
             for f in ('id', 'title', 'project'):
-                if meta[f] is None:
-                    meta[f] = u''
                 if isinstance(meta[f], int):
                     meta[f] = unicode(meta[f])
                 elif isinstance(meta[f], str):
@@ -231,7 +233,7 @@ def pretty_print_task_list(tasks, verbose):
     ]
     if verbose:
         fmt_spec.extend([
-            ['create', '<', 17],
+            ['create', '<', 19],
             ['expire', '<', 17],
         ])
 
